@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <style>
+        button {
+            font-size: 150%;
+            padding: 10px;
+            margin: 5px;
+        }
+        .track-art {
+            width: 10%;
+            height: auto;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 30px;
+            height: 30px;
+            background: #666;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 30px;
+            height: 30px;
+            background: #666;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-ms-thumb {
+            width: 30px;
+            height: 30px;
+            background: #666;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="player">
+        <div class="now-playing">Playing...</div>
+        <img class="track-art" src="" alt="Album cover">
+
+        <div class="controls">
+            <button class="prev-track">&#x23EE;</button>
+            <button class="playpause-track">&#x25B6;</button>
+            <button class="next-track">&#x23ED;</button>
+        </div>
+        <input type="range" class="seek-bar" min="0" max="100" value="0">
+
+        <div class="track-info">
+            <span class="track-name"></span>
+            <span class="track-artist"></span>
+        </div>
+
+        <div class="track-buttons">
+            <!-- Qui verranno inseriti i pulsanti delle tracce -->
+        </div>
+    </div>
+
+    <script>
+        // Elementi dell'interfaccia utente
+        const nowPlaying = document.querySelector('.now-playing');
+        const trackArt = document.querySelector('.track-art');
+        const trackName = document.querySelector('.track-name');
+        const trackArtist = document.querySelector('.track-artist');
+        const prevBtn = document.querySelector('.prev-track');
+        const playPauseBtn = document.querySelector('.playpause-track');
+        const nextBtn = document.querySelector('.next-track');
+        const seekBar = document.querySelector('.seek-bar');
+        const trackButtonsContainer = document.querySelector('.track-buttons');
+
+        // Audio element
+        const audio = new Audio();
+
+        // Track list (sarà popolato dalla richiesta al server)
+        let trackList = [];
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+
+        // Funzione per caricare una traccia specifica
+        function loadTrack(index) {
+            if (index < 0 || index >= trackList.length) return;
+
+            const track = trackList[index];
+            audio.src = decodeURIComponent(track.path);
+            trackArt.src = track.image;
+            trackName.textContent = track.name;
+            trackArtist.textContent = track.artist;
+            audio.load();
+            isPlaying = true;
+            audio.play();
+            playPauseBtn.textContent = '❚❚';
+
+            // Aggiorna la seek bar
+            audio.addEventListener('loadedmetadata', () => {
+                seekBar.max = audio.duration;
+            });
+            audio.addEventListener('timeupdate', () => {
+                seekBar.value = audio.currentTime;
+            });
+        }
+
+        // Funzione per caricare la tracklist dal server
+        async function fetchTrackList() {
+            try {
+                const response = await fetch('http://127.0.0.1:3000/mp3-list');
+                trackList = await response.json();
+                console.log("Track list fetched:", trackList);
+                renderTrackButtons();
+                loadTrack(currentTrackIndex);
+            } catch (error) {
+                console.error('Errore nel caricamento della tracklist:', error);
+            }
+        }
+
+        // Funzione per creare i pulsanti delle tracce
+        function renderTrackButtons() {
+            trackButtonsContainer.innerHTML = ''; // Pulisce il contenitore dei pulsanti
+
+            trackList.forEach((track, index) => {
+                const button = document.createElement('button');
+                button.textContent = track.name;
+                button.addEventListener('click', () => {
+                    currentTrackIndex = index; // Imposta correttamente l'indice corrente
+                    loadTrack(currentTrackIndex);
+                });
+                trackButtonsContainer.appendChild(button);
+            });
+        }
+
+        // Funzioni per i controlli
+        prevBtn.addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex - 1 + trackList.length) % trackList.length;
+            loadTrack(currentTrackIndex);
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+                playPauseBtn.textContent = '►';
+            } else {
+                audio.play();
+                isPlaying = true;
+                playPauseBtn.textContent = '❚❚';
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % trackList.length;
+            loadTrack(currentTrackIndex);
+        });
+
+        seekBar.addEventListener('input', () => {
+            audio.currentTime = seekBar.value;
+        });
+
+        // Evento per riprodurre automaticamente la traccia successiva
+        audio.addEventListener('ended', () => {
+            currentTrackIndex = (currentTrackIndex + 1) % trackList.length;
+            loadTrack(currentTrackIndex);
+        });
+
+        // Carica la tracklist all'avvio
+        fetchTrackList();
+    </script>
+</body>
+</html>
