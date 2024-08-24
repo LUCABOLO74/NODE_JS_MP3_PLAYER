@@ -14,7 +14,7 @@ This project is a Node.js application designed to play all `.mp3` files that the
 2. **Add Your MP3s**: Copy all the `.mp3` files you want to play into the "mp3" subfolder.
 3. **Start the Server**: Run the following command to start the server:
    ```bash
-   node server.js
+   node servermp3.js
    ```
 4. **Access the Application**: Open your web browser and go to [http://127.0.0.1:3000/](http://127.0.0.1:3000/) to start playing your music.
 
