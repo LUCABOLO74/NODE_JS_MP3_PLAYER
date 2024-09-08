@@ -103,18 +103,18 @@
             });
         }
 
-        // Funzione per caricare la tracklist dal server
-        async function fetchTrackList() {
-            try {
-                const response = await fetch('http://127.0.0.1:3000/mp3-list');
-                trackList = await response.json();
-                console.log("Track list fetched:", trackList);
-                renderTrackButtons();
-                loadTrack(currentTrackIndex);
-            } catch (error) {
-                console.error('Errore nel caricamento della tracklist:', error);
-            }
-        }
+async function fetchTrackList() {
+    try {
+        const response = await fetch('http://192.168.31.54:3000/mp3-list');  // Usa l'IP del server
+        trackList = await response.json();
+        console.log("Track list fetched:", trackList);
+        renderTrackButtons();
+        loadTrack(currentTrackIndex);
+    } catch (error) {
+        console.error('Errore nel caricamento della tracklist:', error);
+    }
+}
+
 
         // Funzione per creare i pulsanti delle tracce
         function renderTrackButtons() {
